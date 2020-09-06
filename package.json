@@ -1,0 +1,23 @@
+{
+  "name": "google-search",
+  "description:": "explore with google",
+  "version": "1.0.0",
+  "author": "eisei",
+  "dependencies": {
+    "puppeteer": "1.6.0"
+  },
+  "license": "MIT",
+  "main": "skelton.js",
+  "scripts": {
+    "main": "node skelton.js"
+  },
+  "description": "nikkei-bot",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eisei-Shimizu/nikkei-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Eisei-Shimizu/nikkei-bot/issues"
+  },
+  "homepage": "https://github.com/Eisei-Shimizu/nikkei-bot#readme"
+}
