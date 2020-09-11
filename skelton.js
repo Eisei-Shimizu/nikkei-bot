@@ -44,10 +44,11 @@ function getSMA(priceList, periodList) {
   for (const index in periodList) {
     var closePriceSum = 0;
     var period = periodList[index];
+    var tmpList = priceList;
 
     console.log(period);
     for (I = 0; I < period; I++) {
-      closePriceSum += priceList[priceList.length - 1 - I];
+      closePriceSum += tmpList.pop();
     }
     sma.push(Math.ceil(closePriceSum / period));
   }
