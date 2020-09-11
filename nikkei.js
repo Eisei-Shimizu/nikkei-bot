@@ -6,7 +6,7 @@ module.exports = {
     var options = {
       method: "GET",
       url: "https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/get-charts",
-      qs: { region: "JP", symbol: "NIY%3DF", interval: "60m", range: "3mo" },
+      qs: { region: "JP", symbol: "NIY%3DF", interval: "60m", range: "5d" },
       headers: {
         "x-rapidapi-host": "apidojo-yahoo-finance-v1.p.rapidapi.com",
         "x-rapidapi-key": apiKey,
