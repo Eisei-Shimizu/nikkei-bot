@@ -19,10 +19,17 @@ const nikkei = require("./nikkei.js");
 
   var result = await nikkei.getNikkei1hourCharts();
   if (!result["chart"]["error"]) {
-    console.log("<<<<<<<<<<<<<<<<<");
-    console.log(result["chart"]["result"][0]["indicators"]["quote"][0].close);
+    const closePriceList =
+      result["chart"]["result"][0]["indicators"]["quote"][0].close;
+    const filterdClosePriceList = closePriceList.filter(function (value) {
+      return value != null;
+    });
+
+    const smaPeriodList = [3, 10, 25];
 
     // 平均線を3, 10, 25 それぞれで算出
+    const sma = getSMA(filterdClosePriceList, smaPeriodList);
+    console.log(sma);
   } else {
     console.log(result["chart"]["error"]);
   }
@@ -30,3 +37,19 @@ const nikkei = require("./nikkei.js");
   // ブラウザ終了
   await browser.close();
 })();
+
+function getSMA(priceList, periodList) {
+  var sma = [];
+
+  for (const index in periodList) {
+    var closePriceSum = 0;
+    var period = periodList[index];
+
+    console.log(period);
+    for (I = 0; I < period; I++) {
+      closePriceSum += priceList[priceList.length - 1 - I];
+    }
+    sma.push(Math.ceil(closePriceSum / period));
+  }
+  return sma;
+}
