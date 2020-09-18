@@ -1,5 +1,12 @@
 const puppeteer = require("puppeteer");
 const nikkei = require("./nikkei.js");
+
+const loginURL = "https://www.okasan-online.co.jp/login/jp/";
+const brandListURL =
+  "https://fop.okasan-online.co.jp/Web/Gate/Junction#1600444693571_/Web/FutureSymbolList/FTSYMB90";
+const tradeURL =
+  "https://fop.okasan-online.co.jp/Web/Gate/Junction#1600446843933_/Web/Order/DROPEN01?sc=165120018&side=2";
+
 (async () => {
   // Puppeteerの起動
   const browser = await puppeteer.launch({
