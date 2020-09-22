@@ -22,7 +22,8 @@ const tradeURL =
     height: 800,
   });
 
-  await page.goto("http://www.google.co.jp/");
+  // ログイン
+  login(page);
 
   var result = await nikkei.getNikkei1hourCharts();
   if (!result["chart"]["error"]) {
@@ -60,4 +61,24 @@ function getSMA(priceList, periodList) {
     sma.push(Math.ceil(closePriceSum / period));
   }
   return sma;
+}
+
+async function login(page) {
+  await page.goto(loginURL);
+
+  await page.waitForSelector("#loginId");
+  await page.waitForSelector("#loginPass");
+
+  const fs = require("fs");
+  const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
+
+  // ログイン情報入力
+  await page.type("input[name=account]", setting["id"]);
+  await page.type("input[name=pass]", setting["pw"]);
+
+  // 5秒待機
+  await page.waitFor(5000);
+
+  // ログインボタンクリック
+  await page.click("input[id=sougouSubmit]");
 }
