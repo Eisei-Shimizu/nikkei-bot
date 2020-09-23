@@ -1,11 +1,6 @@
 const puppeteer = require("puppeteer");
 const nikkei = require("./nikkei.js");
-
 const loginURL = "https://www.okasan-online.co.jp/login/jp/";
-const brandListURL =
-  "https://fop.okasan-online.co.jp/Web/Gate/Junction#1600444693571_/Web/FutureSymbolList/FTSYMB90";
-const tradeURL =
-  "https://fop.okasan-online.co.jp/Web/Gate/Junction#1600446843933_/Web/Order/DROPEN01?sc=165120018&side=2";
 
 (async () => {
   // Puppeteerの起動
@@ -23,7 +18,32 @@ const tradeURL =
   });
 
   // ログイン
-  login(page);
+  await login(page);
+
+  // 5秒待機
+  await page.waitFor(5000);
+
+  // OKボタンクリック
+  await page.click("input[name=buttonOK]");
+
+  // 5秒待機
+  await page.waitFor(5000);
+
+  // トレード画面へ遷移
+  await page.click("#gmenu_dealing");
+
+  await page.click("#smenu_TrdFop");
+
+  await page.click(".btn_futures");
+
+  const pages = await browser.pages();
+  const detailPage = pages[2];
+  await detailPage.bringToFront();
+
+  await detailPage.waitFor(5000);
+
+  // 銘柄選択画面へ
+  await detailPage.click("#main-menu > li:nth-child(2)");
 
   var result = await nikkei.getNikkei1hourCharts();
   if (!result["chart"]["error"]) {
