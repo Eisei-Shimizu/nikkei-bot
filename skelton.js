@@ -38,7 +38,6 @@ const loginURL = "https://www.okasan-online.co.jp/login/jp/";
 
   const pages = await browser.pages();
   const detailPage = pages[2];
-  await detailPage.bringToFront();
 
   await detailPage.waitFor(5000);
 
