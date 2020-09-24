@@ -29,20 +29,28 @@ const loginURL = "https://www.okasan-online.co.jp/login/jp/";
   // 5秒待機
   await page.waitFor(5000);
 
-  // トレード画面へ遷移
   await page.click("#gmenu_dealing");
 
   await page.click("#smenu_TrdFop");
 
   await page.click(".btn_futures");
 
+  await page.waitFor(3000);
+
   const pages = await browser.pages();
   const detailPage = pages[2];
-
-  await detailPage.waitFor(5000);
+  await detailPage.setViewport({
+    width: 1200,
+    height: 800,
+  });
 
   // 銘柄選択画面へ
   await detailPage.click("#main-menu > li:nth-child(2)");
+
+  // トレード画面へ
+  await detailPage.click(
+    "#table_1 > table > tbody > tr:nth-child(2) > td:nth-child(10) > span > .side-buy"
+  );
 
   var result = await nikkei.getNikkei1hourCharts();
   if (!result["chart"]["error"]) {
