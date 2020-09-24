@@ -2,4 +2,6 @@
   "id": "",
   "pw": "",
   "tradePw": ""
+  "deviationRange": 15,
+  "lossCutRange": 0
 }
