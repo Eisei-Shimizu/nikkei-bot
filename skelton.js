@@ -54,6 +54,15 @@ const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
     "#table_1 > table > tbody > tr:nth-child(2) > td:nth-child(10) > span > .side-buy"
   );
 
+  // 枚数設定
+  await detailPage.type("input[id=OrderQuantity]", setting["LOT"]);
+
+  // 成行注文
+  await detailPage.click("#OrderTypeNormal > div > label:nth-child(1)");
+
+  // 注文内容確認
+  await detailPage.click("#OrderButton");
+
   var result = await nikkei.getNikkei1hourCharts();
   if (!result["chart"]["error"]) {
     const closePriceList =
