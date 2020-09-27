@@ -1,6 +1,8 @@
 const puppeteer = require("puppeteer");
 const nikkei = require("./nikkei.js");
 const loginURL = "https://www.okasan-online.co.jp/login/jp/";
+const fs = require("fs");
+const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
 
 (async () => {
   // Puppeteerの起動
@@ -95,9 +97,6 @@ async function login(page) {
 
   await page.waitForSelector("#loginId");
   await page.waitForSelector("#loginPass");
-
-  const fs = require("fs");
-  const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
 
   // ログイン情報入力
   await page.type("input[name=account]", setting["id"]);
