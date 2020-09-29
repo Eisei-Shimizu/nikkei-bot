@@ -6,8 +6,8 @@
   "lossCutRange": 0,
   "LOT": "1",
   "tradeTime": [
-    { "dayOfWeek": "Weekdays", "start": "8:00", "end": "15:15" },
+    { "dayOfWeek": "Weekdays", "start": "08:00", "end": "15:15" },
     { "dayOfWeek": "Weekdays", "start": "16:15", "end": "23:59" },
-    { "dayOfWeek": "Saturday", "start": "0:00", "end": "5:30" }
+    { "dayOfWeek": "Saturday", "start": "00:00", "end": "05:30" }
   ]
 }

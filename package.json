@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "author": "eisei",
   "dependencies": {
+    "moment": "^2.29.0",
     "puppeteer": "1.6.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6"

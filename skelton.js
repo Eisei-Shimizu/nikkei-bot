@@ -3,6 +3,24 @@ const nikkei = require("./nikkei.js");
 const loginURL = "https://www.okasan-online.co.jp/login/jp/";
 const fs = require("fs");
 const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
+const dayOfWeekList = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+const moment = require("moment");
+
+//while (true) {
+if (checkTradeTime()) {
+  console.log("トレード可能");
+} else {
+  console.log("トレード不可");
+}
+//}
 
 (async () => {
   // Puppeteerの起動
@@ -76,13 +94,68 @@ const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
     // 平均線を3, 10, 25 それぞれで算出
     const sma = getSMA(filterdClosePriceList, smaPeriodList);
     console.log(sma);
+
+    // TODO: 乖離幅設定
+    // TODO: 損切り幅設定
+    // TODO: エントリー
   } else {
     console.log(result["chart"]["error"]);
   }
 
   // ブラウザ終了
-  await browser.close();
+  //await browser.close();
 })();
+
+function convertWeekdays(day) {
+  // 月〜金
+  const weekdaysList = [
+    dayOfWeekList[1],
+    dayOfWeekList[2],
+    dayOfWeekList[3],
+    dayOfWeekList[4],
+    dayOfWeekList[5],
+  ];
+
+  weekdaysList.forEach((weekday) => {
+    if (weekday == day) {
+      console.log("weekday!!");
+      day = "Weekdays";
+    }
+  });
+
+  return day;
+}
+
+function checkTradeTime() {
+  const tradeTimeList = setting["tradeTime"];
+  const currentDate = moment();
+  const day = convertWeekdays(dayOfWeekList[currentDate.day()]);
+  var result = false;
+
+  console.log(currentDate.format("YYYY-MM-DD HH:mm"));
+
+  tradeTimeList.forEach((tradeTime) => {
+    // オンライントレード利用可能時間内
+    const startM = moment(
+      currentDate.format("YYYY-MM-DD") + " " + tradeTime["start"],
+      "YYYY-MM-DD HH:mm"
+    );
+    const endM = moment(
+      currentDate.format("YYYY-MM-DD") + " " + tradeTime["end"],
+      "YYYY-MM-DD HH:mm"
+    );
+
+    if (
+      tradeTime["dayOfWeek"] == day &&
+      currentDate.isSameOrAfter(startM) &&
+      currentDate.isSameOrBefore(endM)
+    ) {
+      result = true;
+    }
+  });
+
+  return result;
+}
 
 function getSMA(priceList, periodList) {
   var sma = [];
