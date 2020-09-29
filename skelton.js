@@ -40,28 +40,28 @@ const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
   await page.waitFor(3000);
 
   const pages = await browser.pages();
-  const detailPage = pages[2];
-  await detailPage.setViewport({
+  const tradePage = pages[2];
+  await tradePage.setViewport({
     width: 1200,
     height: 800,
   });
 
   // 銘柄選択画面へ
-  await detailPage.click("#main-menu > li:nth-child(2)");
+  await Promise.all([
+    tradePage.waitForNavigation({ waitUntil: "load" }),
+    tradePage.click("#main-menu > li:nth-child(2)"),
+  ]);
 
   // トレード画面へ
-  await detailPage.click(
-    "#table_1 > table > tbody > tr:nth-child(2) > td:nth-child(10) > span > .side-buy"
-  );
+  await Promise.all([
+    tradePage.waitForNavigation({ waitUntil: "load" }),
+    tradePage.click(
+      "#table_1 > table > tbody > tr:nth-child(4) > td:nth-child(10) > span > .side-buy"
+    ),
+  ]);
 
-  // 枚数設定
-  await detailPage.type("input[id=OrderQuantity]", setting["LOT"]);
-
-  // 成行注文
-  await detailPage.click("#OrderTypeNormal > div > label:nth-child(1)");
-
-  // 注文内容確認
-  await detailPage.click("#OrderButton");
+  // order(tradePage);
+  // liquidation(tradePage);
 
   var result = await nikkei.getNikkei1hourCharts();
   if (!result["chart"]["error"]) {
@@ -116,4 +116,68 @@ async function login(page) {
 
   // ログインボタンクリック
   await page.click("input[id=sougouSubmit]");
+}
+
+async function order(page) {
+  // 枚数設定
+  await page.type("input[id=OrderQuantity]", setting["LOT"]);
+
+  // 成行注文
+  await page.click("#OrderTypeNormal > div > label:nth-child(1)");
+
+  // 注文内容確認画面へ
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("#OrderButton"),
+  ]);
+
+  // 取引パスワード入力
+  await page.type("input[name=TradingPassword]", setting["tradePw"]);
+
+  // 注文
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("#OrderButton"),
+  ]);
+}
+
+async function liquidation(page) {
+  // 建玉画面へ
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click(".sub-menu > li:nth-child(3)"),
+  ]);
+
+  // 決済注文画面へ
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click('button[cellbutton="true"]'),
+  ]);
+
+  // 全数量
+  await page.click("button[id=AllQty]");
+
+  // 成行注文
+  await page.click("#OrderTypeNormal > div > label:nth-child(1)");
+
+  // 注文内容確認画面へ
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("#OrderButton"),
+  ]);
+
+  // 取引パスワード入力
+  await page.type("input[name=TradingPassword]", setting["tradePw"]);
+
+  // 注文
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("#OrderButton"),
+  ]);
+}
+
+async function RegularlyPageReload(page) {
+  await page.evaluate(() => {
+    location.reload(true);
+  });
 }
