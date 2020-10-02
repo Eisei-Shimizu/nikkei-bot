@@ -13,16 +13,24 @@ const dayOfWeekList = [
   "Saturday",
 ];
 const moment = require("moment");
+const SIDE_NONE = 0;
+const SIDE_BUY = 1;
+const SIDE_SELL = -1;
+const POS_SIDE_BUY = "買";
+const POS_SIDE_SELL = "売";
 
-//while (true) {
-if (checkTradeTime()) {
-  console.log("トレード可能");
-} else {
-  console.log("トレード不可");
-}
-//}
+/*while (true) {
+  if (checkTradeTime()) {
+    console.log("トレード可能");
+    trade();
+  } else {
+    console.log("トレード不可");
+  }
+}*/
 
-(async () => {
+trade();
+
+async function trade() {
   // Puppeteerの起動
   const browser = await puppeteer.launch({
     headless: false, // Headlessモードで起動するか
@@ -64,22 +72,71 @@ if (checkTradeTime()) {
     height: 800,
   });
 
-  // 銘柄選択画面へ
-  await Promise.all([
-    tradePage.waitForNavigation({ waitUntil: "load" }),
-    tradePage.click("#main-menu > li:nth-child(2)"),
-  ]);
+  gotoPositionView(tradePage);
 
-  // トレード画面へ
-  await Promise.all([
-    tradePage.waitForNavigation({ waitUntil: "load" }),
-    tradePage.click(
-      "#table_1 > table > tbody > tr:nth-child(4) > td:nth-child(10) > span > .side-buy"
-    ),
-  ]);
+  await tradePage.waitFor(10000);
 
-  // order(tradePage);
-  // liquidation(tradePage);
+  // ポジションがあるかどうか決済ボタンの表示で判断
+  const position = await tradePage.$$('button[cellbutton="true"]');
+  let posSide = SIDE_NONE;
+
+  if (position.length != 0) {
+    // 買い or 売りチェック
+    const posSideText = await tradePage.evaluate(
+      () =>
+        document.querySelector("tr.datagrid-row > td:nth-child(3) > div > span")
+          .textContent
+    );
+
+    if (posSideText == POS_SIDE_BUY) {
+      posSide = SIDE_BUY;
+    } else if (posSideText == POS_SIDE_SELL) {
+      posSide = SIDE_SELL;
+    }
+
+    // ロスカットチェック
+    // ロスカット後は建玉画面に遷移
+    let currentPriceText = await tradePage.evaluate(
+      () =>
+        document.querySelector("tr.datagrid-row > td:nth-child(7) > div > div")
+          .textContent
+    );
+
+    let posPriceText = await tradePage.evaluate(
+      () =>
+        document.querySelector("tr.datagrid-row > td:nth-child(6) > div")
+          .textContent
+    );
+
+    currentPriceText = currentPriceText.split(" ")[0].replace(",", "");
+    posPriceText = posPriceText.split(" ")[0].replace(",", "");
+
+    console.log("評価額: " + currentPriceText);
+    console.log("建て値: " + posPriceText);
+
+    const currentPrice = parseInt(currentPriceText);
+    const posPrice = parseInt(posPriceText);
+    const lossCutRange = setting["lossCutRange"];
+
+    let isLossCut = false;
+    if (posSide == SIDE_BUY && -lossCutRange >= currentPrice - posPrice) {
+      isLossCut = true;
+    } else if (
+      posSide == SIDE_SELL &&
+      lossCutRange >= currentPrice - posPrice
+    ) {
+      isLossCut = true;
+    }
+
+    if (isLossCut) {
+      // 精算
+      console.log("ロスカット");
+      gotoPositionView(tradePage);
+      liquidation(tradePage);
+    }
+  }
+
+  // TODO: 取引時間チェック
 
   var result = await nikkei.getNikkei1hourCharts();
   if (!result["chart"]["error"]) {
@@ -95,16 +152,42 @@ if (checkTradeTime()) {
     const sma = getSMA(filterdClosePriceList, smaPeriodList);
     console.log(sma);
 
-    // TODO: 乖離幅設定
-    // TODO: 損切り幅設定
-    // TODO: エントリー
+    // G.C or D.C
+    const isCross = sma[0] == sma[1];
+
+    if (isCross) {
+      // 乖離幅設定
+      const deviationRange = setting["deviationRange"];
+
+      // 注文
+      let orderSide = SIDE_NONE;
+
+      // 短平均線が中平均線上抜け =>　買い
+      if (deviationRange >= sma[0] - sma[1]) {
+        // 買い注文
+        orderSide = SIDE_BUY;
+      }
+      // 短平均線が中平均線下抜け =>　売り
+      else if (deviationRange >= sma[1] - sma[0]) {
+        // 売り注文
+        orderSide = SIDE_SELL;
+      }
+
+      if (posSide == SIDE_NONE && orderSide != SIDE_NONE) {
+        // エントリー
+        order(tradePage, orderSide);
+      } else if (posSide != SIDE_NONE && posSide != orderSide) {
+        // 精算
+        liquidation(tradePage);
+      }
+    }
   } else {
     console.log(result["chart"]["error"]);
   }
 
   // ブラウザ終了
   //await browser.close();
-})();
+}
 
 function convertWeekdays(day) {
   // 月〜金
@@ -191,9 +274,59 @@ async function login(page) {
   await page.click("input[id=sougouSubmit]");
 }
 
-async function order(page) {
+async function gotoPositionView(page) {
+  // 銘柄選択画面へ
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("#main-menu > li:nth-child(2)"),
+  ]);
+
+  await page.waitFor(3000);
+
+  // ポジション確認
+  // 建玉画面へ
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click(".sub-menu > li:nth-child(3)"),
+  ]);
+}
+
+async function gotoTradeView(page) {
+  // 銘柄選択画面へ
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("#main-menu > li:nth-child(2)"),
+  ]);
+
+  // トレード画面へ
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click(
+      "#table_1 > table > tbody > tr:nth-child(4) > td:nth-child(10) > span > .side-buy"
+    ),
+  ]);
+}
+
+async function order(page, orderSide) {
+  gotoTradeView(page);
+
+  await page.waitFor(3000);
+
   // 枚数設定
   await page.type("input[id=OrderQuantity]", setting["LOT"]);
+
+  // 買い・売り設定
+  if (orderSide == SIDE_BUY) {
+    // 買い
+    await page.click(
+      '#all-order-content > table.order.variable.view-when-1.display-relay.display-portfolio.content-2col > tbody > tr:nth-child(1) > td.content > div > label.side-buy > input[type="radio"]'
+    );
+  } else {
+    // 売り
+    await page.click(
+      '#all-order-content > table.order.variable.view-when-1.display-relay.display-portfolio.content-2col > tbody > tr:nth-child(1) > td.content > div > label.side-sell > input[type="radio"]'
+    );
+  }
 
   // 成行注文
   await page.click("#OrderTypeNormal > div > label:nth-child(1)");
@@ -212,6 +345,8 @@ async function order(page) {
     page.waitForNavigation({ waitUntil: "load" }),
     page.click("#OrderButton"),
   ]);
+
+  gotoPositionView(page);
 }
 
 async function liquidation(page) {
