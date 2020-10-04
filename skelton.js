@@ -79,7 +79,13 @@ async function trade() {
   // 取引可能時間内でループ
   while (checkTradeTime()) {
     // ポジションがあるかどうか決済ボタンの表示で判断
-    const position = await tradePage.$$('button[cellbutton="true"]');
+    let position = [];
+    try {
+      position = await tradePage.$$('button[cellbutton="true"]');
+    } catch (error) {
+      console.log("ポジションが取得できませんでした");
+    }
+
     let posSide = SIDE_NONE;
 
     if (position.length != 0) {
