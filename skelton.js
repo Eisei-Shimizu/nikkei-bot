@@ -215,6 +215,7 @@ function convertWeekdays(day) {
 }
 
 function checkTradeTime() {
+  return true;
   const tradeTimeList = setting["tradeTime"];
   const currentDate = moment();
   const day = convertWeekdays(dayOfWeekList[currentDate.day()]);
@@ -390,11 +391,7 @@ async function liquidation(page) {
 }
 
 async function RegularlyPageReload(page) {
-  await Promise.all([
-    page.evaluate(() => {
-      location.reload(true);
-    }),
-  ]);
+  await Promise.all([page.click(".withImage")]);
 
   await page.waitFor(5000);
 }
