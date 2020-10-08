@@ -409,7 +409,9 @@ async function liquidation(page) {
 }
 
 async function RegularlyPageReload(page) {
-  await Promise.all([page.click(".withImage")]);
-
-  await page.waitFor(5000);
+  // 1時間に1度価格取得処理実行するために1分ごとの画面更新を60回繰り返す
+  for (let I = 0; I < 60; I++) {
+    await Promise.all([page.click(".withImage")]);
+    await page.waitFor(60000);
+  }
 }
