@@ -148,7 +148,7 @@ async function trade() {
       }
     }
 
-    var result = await nikkei.getNikkei1hourCharts();
+    const result = await nikkei.getNikkei1hourCharts();
     if (!result["chart"]["error"]) {
       const closePriceList =
         result["chart"]["result"][0]["indicators"]["quote"][0].close;
