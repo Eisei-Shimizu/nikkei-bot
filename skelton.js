@@ -18,6 +18,8 @@ const SIDE_BUY = 1;
 const SIDE_SELL = -1;
 const POS_SIDE_BUY = "買";
 const POS_SIDE_SELL = "売";
+const UP_SIDE = 1;
+const DOWN_SIDE = -1;
 
 /*while (true) {
   if (checkTradeTime()) {
@@ -160,6 +162,16 @@ async function trade() {
       const sma = getSMA(filterdClosePriceList, smaPeriodList);
       console.log(sma);
 
+      let priceSide = SIDE_NONE;
+
+      if (sma[0] > sma[1]) {
+        priceSide = UP_SIDE;
+        console.log("price side: UP_SIDE");
+      } else if (sma[0] < sma[1]) {
+        priceSide = DOWN_SIDE;
+        console.log("price side: DOWN_SIDE");
+      }
+
       // G.C or D.C
       const isCross = sma[0] == sma[1];
 
@@ -171,12 +183,12 @@ async function trade() {
         let orderSide = SIDE_NONE;
 
         // 短平均線が中平均線上抜け =>　買い
-        if (deviationRange >= sma[0] - sma[1]) {
+        if (priceSide == DOWN_SIDE && deviationRange >= sma[0] - sma[1]) {
           // 買い注文
           orderSide = SIDE_BUY;
         }
         // 短平均線が中平均線下抜け =>　売り
-        else if (deviationRange >= sma[1] - sma[0]) {
+        else if (priceSide == UP_SIDE && deviationRange >= sma[1] - sma[0]) {
           // 売り注文
           orderSide = SIDE_SELL;
         }
