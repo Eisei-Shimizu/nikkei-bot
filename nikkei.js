@@ -1,7 +1,9 @@
 module.exports = {
   async getNikkei1hourCharts() {
-    var apiKey = "b70d850f62msh14f5fe645adb47fp113163jsn9694232e036d";
-    var request = require("request-promise");
+    const fs = require("fs");
+    const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
+    const apiKey = setting["apiKey"];
+    const request = require("request-promise");
 
     var options = {
       method: "GET",
