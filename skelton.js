@@ -21,16 +21,16 @@ const POS_SIDE_SELL = "売";
 const UP_SIDE = 1;
 const DOWN_SIDE = -1;
 
-/*while (true) {
-  if (checkTradeTime()) {
-    console.log("トレード可能");
-    trade();
-  } else {
-    console.log("トレード不可");
+(async () => {
+  while (true) {
+    if (checkTradeTime()) {
+      console.log("トレード可能");
+      await trade();
+    } else {
+      console.log("トレード不可");
+    }
   }
-}*/
-
-trade();
+})();
 
 async function trade() {
   // Puppeteerの起動
@@ -205,7 +205,7 @@ async function trade() {
       console.log(result["chart"]["error"]);
     }
 
-    RegularlyPageReload(tradePage);
+    await RegularlyPageReload(tradePage);
   }
 
   // ブラウザ終了
@@ -233,7 +233,6 @@ function convertWeekdays(day) {
 }
 
 function checkTradeTime() {
-  return true;
   const tradeTimeList = setting["tradeTime"];
   const currentDate = moment();
   const day = convertWeekdays(dayOfWeekList[currentDate.day()]);
@@ -411,6 +410,7 @@ async function liquidation(page) {
 async function RegularlyPageReload(page) {
   // 1時間に1度価格取得処理実行するために1分ごとの画面更新を60回繰り返す
   for (let I = 0; I < 60; I++) {
+    console.log("画面更新");
     await Promise.all([page.click(".withImage")]);
     await page.waitFor(60000);
   }
