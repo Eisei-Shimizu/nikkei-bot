@@ -54,16 +54,29 @@ async function trade() {
   await page.waitFor(5000);
 
   // OKボタンクリック
-  await page.click("input[name=buttonOK]");
+
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("input[name=buttonOK]"),
+  ]);
 
   // 5秒待機
   await page.waitFor(5000);
 
-  await page.click("#gmenu_dealing");
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("#gmenu_dealing"),
+  ]);
 
-  await page.click("#smenu_TrdFop");
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click("#smenu_TrdFop"),
+  ]);
 
-  await page.click(".btn_futures");
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click(".btn_futures"),
+  ]);
 
   await page.waitFor(3000);
 
