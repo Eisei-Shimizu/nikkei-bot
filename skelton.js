@@ -20,6 +20,7 @@ const POS_SIDE_BUY = "買";
 const POS_SIDE_SELL = "売";
 const UP_SIDE = 1;
 const DOWN_SIDE = -1;
+const _sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 (async () => {
   while (true) {
@@ -29,6 +30,7 @@ const DOWN_SIDE = -1;
     } else {
       console.log("トレード不可");
     }
+    await _sleep(5000);
   }
 })();
 
