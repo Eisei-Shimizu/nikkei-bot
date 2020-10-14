@@ -73,10 +73,9 @@ async function trade() {
     page.click("#smenu_TrdFop"),
   ]);
 
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: "load" }),
-    page.click(".btn_futures"),
-  ]);
+  await page.waitFor(5000);
+  
+  await page.click(".btn_futures")
 
   await page.waitFor(3000);
 
