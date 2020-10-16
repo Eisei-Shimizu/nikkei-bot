@@ -13,6 +13,8 @@ const dayOfWeekList = [
   "Saturday",
 ];
 const moment = require("moment");
+var lastGetPriceTime = null
+
 const SIDE_NONE = 0;
 const SIDE_BUY = 1;
 const SIDE_SELL = -1;
@@ -76,7 +78,7 @@ async function trade() {
   ]);
 
   await page.waitFor(5000);
-  
+
   await page.click(".btn_futures")
 
   await page.waitFor(3000);
@@ -162,62 +164,66 @@ async function trade() {
           liquidation(tradePage);
         }
       }
+      
+      const now = moment();
+      if(lastGetPriceTime != null && 1 >= lastGetPriceTime.diff(now, hours)){
+        lastGetPriceTime = moment();
+        const result = await nikkei.getNikkei1hourCharts();
+        if (!result["chart"]["error"]) {
+          const closePriceList =
+            result["chart"]["result"][0]["indicators"]["quote"][0].close;
+          const filterdClosePriceList = closePriceList.filter(function (value) {
+            return value != null;
+          });
 
-      const result = await nikkei.getNikkei1hourCharts();
-      if (!result["chart"]["error"]) {
-        const closePriceList =
-          result["chart"]["result"][0]["indicators"]["quote"][0].close;
-        const filterdClosePriceList = closePriceList.filter(function (value) {
-          return value != null;
-        });
+          const smaPeriodList = [3, 10, 25];
 
-        const smaPeriodList = [3, 10, 25];
+          // 平均線を3, 10, 25 それぞれで算出
+          const sma = getSMA(filterdClosePriceList, smaPeriodList);
+          console.log(sma);
 
-        // 平均線を3, 10, 25 それぞれで算出
-        const sma = getSMA(filterdClosePriceList, smaPeriodList);
-        console.log(sma);
+          let priceSide = SIDE_NONE;
 
-        let priceSide = SIDE_NONE;
+          if (sma[0] > sma[1]) {
+            priceSide = UP_SIDE;
+            console.log("price side: UP_SIDE");
+          } else if (sma[0] < sma[1]) {
+            priceSide = DOWN_SIDE;
+            console.log("price side: DOWN_SIDE");
+          }
 
-        if (sma[0] > sma[1]) {
-          priceSide = UP_SIDE;
-          console.log("price side: UP_SIDE");
-        } else if (sma[0] < sma[1]) {
-          priceSide = DOWN_SIDE;
-          console.log("price side: DOWN_SIDE");
+          // G.C or D.C
+          const isCross = sma[0] == sma[1];
+
+          if (isCross) {
+            // 乖離幅設定
+            const deviationRange = setting["deviationRange"];
+
+            // 注文
+            let orderSide = SIDE_NONE;
+
+            // 短平均線が中平均線上抜け =>　買い
+            if (priceSide == DOWN_SIDE && deviationRange >= sma[0] - sma[1]) {
+              // 買い注文
+              orderSide = SIDE_BUY;
+            }
+            // 短平均線が中平均線下抜け =>　売り
+            else if (priceSide == UP_SIDE && deviationRange >= sma[1] - sma[0]) {
+              // 売り注文
+              orderSide = SIDE_SELL;
+            }
+
+            if (posSide == SIDE_NONE && orderSide != SIDE_NONE) {
+              // エントリー
+              order(tradePage, orderSide);
+            } else if (posSide != SIDE_NONE && posSide != orderSide) {
+              // 精算
+              liquidation(tradePage);
+            }
+          }
+        } else {
+          console.log(result["chart"]["error"]);
         }
-
-        // G.C or D.C
-        const isCross = sma[0] == sma[1];
-
-        if (isCross) {
-          // 乖離幅設定
-          const deviationRange = setting["deviationRange"];
-
-          // 注文
-          let orderSide = SIDE_NONE;
-
-          // 短平均線が中平均線上抜け =>　買い
-          if (priceSide == DOWN_SIDE && deviationRange >= sma[0] - sma[1]) {
-            // 買い注文
-            orderSide = SIDE_BUY;
-          }
-          // 短平均線が中平均線下抜け =>　売り
-          else if (priceSide == UP_SIDE && deviationRange >= sma[1] - sma[0]) {
-            // 売り注文
-            orderSide = SIDE_SELL;
-          }
-
-          if (posSide == SIDE_NONE && orderSide != SIDE_NONE) {
-            // エントリー
-            order(tradePage, orderSide);
-          } else if (posSide != SIDE_NONE && posSide != orderSide) {
-            // 精算
-            liquidation(tradePage);
-          }
-        }
-      } else {
-        console.log(result["chart"]["error"]);
       }
 
       await RegularlyPageReload(tradePage);
