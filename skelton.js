@@ -54,34 +54,39 @@ async function trade() {
   // ログイン
   await login(page);
 
-  // 5秒待機
-  await page.waitFor(5000);
+  try {
+    // 5秒待機
+    await page.waitFor(5000);
 
-  // OKボタンクリック
+    // OKボタンクリック
 
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: "load" }),
-    page.click("input[name=buttonOK]"),
-  ]);
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "load" }),
+      page.click("input[name=buttonOK]"),
+    ]);
 
-  // 5秒待機
-  await page.waitFor(5000);
+    // 5秒待機
+    await page.waitFor(5000);
 
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: "load" }),
-    page.click("#gmenu_dealing"),
-  ]);
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "load" }),
+      page.click("#gmenu_dealing"),
+    ]);
 
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: "load" }),
-    page.click("#smenu_TrdFop"),
-  ]);
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: "load" }),
+      page.click("#smenu_TrdFop"),
+    ]);
 
-  await page.waitFor(5000);
+    await page.waitFor(5000);
 
-  await page.click(".btn_futures")
+    await page.click(".btn_futures")
 
-  await page.waitFor(3000);
+    await page.waitFor(3000);
+
+  } catch (error) {
+    console.log(error);
+  }
 
   const pages = await browser.pages();
   const tradePage = pages[2];
