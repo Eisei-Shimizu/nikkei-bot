@@ -227,8 +227,9 @@ async function trade() {
       }
 
       await RegularlyPageReload(tradePage);
-    }catch{
+    }catch(error){
       // 例外発生したらブラウザを開き直してログインからスタート
+      console.log(error);
       break;
     }
   }
