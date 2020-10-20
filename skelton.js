@@ -166,7 +166,7 @@ async function trade() {
       }
       
       const now = moment();
-      if(lastGetPriceTime != null && 1 >= lastGetPriceTime.diff(now, hours)){
+      if(lastGetPriceTime == null || 1 >= lastGetPriceTime.diff(now, "hours")){
         lastGetPriceTime = moment();
         const result = await nikkei.getNikkei1hourCharts();
         if (!result["chart"]["error"]) {
