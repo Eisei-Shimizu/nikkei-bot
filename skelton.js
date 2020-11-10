@@ -59,7 +59,6 @@ async function trade() {
     await page.waitFor(5000);
 
     // OKボタンクリック
-
     await Promise.all([
       page.waitForNavigation({ waitUntil: "load" }),
       page.click("input[name=buttonOK]"),
@@ -90,14 +89,19 @@ async function trade() {
 
   const pages = await browser.pages();
   const tradePage = pages[2];
-  await tradePage.setViewport({
-    width: 1200,
-    height: 800,
-  });
 
-  gotoPositionView(tradePage);
+  try {
+    await tradePage.setViewport({
+      width: 1200,
+      height: 800,
+    });
 
-  await tradePage.waitFor(10000);
+    gotoPositionView(tradePage);
+
+    await tradePage.waitFor(10000); 
+  } catch (error) {
+    console.log(error);
+  }
 
   // 取引可能時間内でループ
   while (checkTradeTime()) {
@@ -171,7 +175,7 @@ async function trade() {
       }
       
       const now = moment();
-      if(lastGetPriceTime == null || 1 >= lastGetPriceTime.diff(now, "hours")){
+      if(lastGetPriceTime == null || 0 > lastGetPriceTime.diff(now, "hours")){
         lastGetPriceTime = moment();
         const result = await nikkei.getNikkei1hourCharts();
         if (!result["chart"]["error"]) {
@@ -468,6 +472,7 @@ async function RegularlyPageReload(page) {
       await page.waitFor(60000);
     }
   } catch(error){
+    console.log(error);
     throw error;
   }
 }
