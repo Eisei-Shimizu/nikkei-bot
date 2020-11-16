@@ -1,7 +1,7 @@
 {
   "apiKey": "",
   "pw": "",
-  "tradePw": ""
+  "tradePw": "",
   "deviationRange": 15,
   "lossCutRange": 0,
   "LOT": "1",
