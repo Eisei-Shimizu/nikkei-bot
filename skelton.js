@@ -14,6 +14,7 @@ const dayOfWeekList = [
 ];
 const moment = require("moment");
 var lastGetPriceTime = null
+var isCross = null;
 
 const SIDE_NONE = 0;
 const SIDE_BUY = 1;
@@ -202,9 +203,10 @@ async function trade() {
           }
 
           // G.C or D.C
-          const isCross = sma[0] == sma[1];
-
-          if (isCross) {
+          if(isCross == null){
+            isCross = sma[0] == sma[1];
+          }
+          else if (isCross) {
             // 乖離幅設定
             const deviationRange = setting["deviationRange"];
 
@@ -225,9 +227,11 @@ async function trade() {
             if (posSide == SIDE_NONE && orderSide != SIDE_NONE) {
               // エントリー
               order(tradePage, orderSide);
+              isCross = null;
             } else if (posSide != SIDE_NONE && posSide != orderSide) {
               // 精算
               liquidation(tradePage);
+              isCross = null;
             }
           }
         } else {
