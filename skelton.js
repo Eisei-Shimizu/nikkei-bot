@@ -2,6 +2,17 @@ const puppeteer = require("puppeteer");
 const nikkei = require("./nikkei.js");
 const loginURL = "https://www.okasan-online.co.jp/login/jp/";
 const fs = require("fs");
+const log4js = require('log4js')
+log4js.configure({
+  appenders : {
+    system : {type : 'datefile', filename : 'logs/system.log', pattern: '-yyyy-MM-dd'}
+  },
+  categories : {
+    default : {appenders : ['system'], level : 'info'},
+  }
+});
+const logger = log4js.getLogger();
+logger.level = 'info';
 const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
 const dayOfWeekList = [
   "Sunday",
@@ -28,10 +39,10 @@ const _sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 (async () => {
   while (true) {
     if (checkTradeTime()) {
-      console.log("トレード可能");
+      logger.info("トレード可能");
       await trade();
     } else {
-      console.log("トレード不可");
+      logger.info("トレード不可");
     }
     await _sleep(5000);
   }
@@ -85,7 +96,7 @@ async function trade() {
     await page.waitFor(3000);
 
   } catch (error) {
-    console.log(error);
+    logger.error(error);
   }
 
   const pages = await browser.pages();
@@ -101,7 +112,7 @@ async function trade() {
 
     await tradePage.waitFor(10000); 
   } catch (error) {
-    console.log(error);
+    logger.error(error);
   }
 
   // 取引可能時間内でループ
@@ -112,7 +123,7 @@ async function trade() {
       try {
         position = await tradePage.$$('button[cellbutton="true"]');
       } catch (error) {
-        console.log("ポジションが取得できませんでした");
+        logger.error("ポジションが取得できませんでした");
       }
 
       let posSide = SIDE_NONE;
@@ -150,8 +161,8 @@ async function trade() {
         currentPriceText = currentPriceText.split(" ")[0].replace(",", "");
         posPriceText = posPriceText.split(" ")[0].replace(",", "");
 
-        console.log("評価額: " + currentPriceText);
-        console.log("建て値: " + posPriceText);
+        logger.info("評価額: " + currentPriceText);
+        logger.info("建て値: " + posPriceText);
 
         const currentPrice = parseInt(currentPriceText);
         const posPrice = parseInt(posPriceText);
@@ -169,7 +180,7 @@ async function trade() {
 
         if (isLossCut) {
           // 精算
-          console.log("ロスカット");
+          logger.info("ロスカット");
           gotoPositionView(tradePage);
           liquidation(tradePage);
         }
@@ -190,16 +201,16 @@ async function trade() {
 
           // 平均線を3, 10, 25 それぞれで算出
           const sma = getSMA(filterdClosePriceList, smaPeriodList);
-          console.log(sma);
+          logger.info(sma);
 
           let priceSide = SIDE_NONE;
 
           if (sma[0] > sma[1]) {
             priceSide = UP_SIDE;
-            console.log("price side: UP_SIDE");
+            logger.info("price side: UP_SIDE");
           } else if (sma[0] < sma[1]) {
             priceSide = DOWN_SIDE;
-            console.log("price side: DOWN_SIDE");
+            logger.info("price side: DOWN_SIDE");
           }
 
           // G.C or D.C
@@ -235,14 +246,14 @@ async function trade() {
             }
           }
         } else {
-          console.log(result["chart"]["error"]);
+          logger.error(result["chart"]["error"]);
         }
       }
 
       await RegularlyPageReload(tradePage);
     }catch(error){
       // 例外発生したらブラウザを開き直してログインからスタート
-      console.log(error);
+      logger.error(error);
       break;
     }
   }
@@ -263,7 +274,7 @@ function convertWeekdays(day) {
 
   weekdaysList.forEach((weekday) => {
     if (weekday == day) {
-      console.log("weekday!!");
+      logger.info("weekday!!");
       day = "Weekdays";
     }
   });
@@ -277,7 +288,7 @@ function checkTradeTime() {
   const day = convertWeekdays(dayOfWeekList[currentDate.day()]);
   var result = false;
 
-  console.log(currentDate.format("YYYY-MM-DD HH:mm"));
+  logger.info(currentDate.format("YYYY-MM-DD HH:mm"));
 
   tradeTimeList.forEach((tradeTime) => {
     // オンライントレード利用可能時間内
@@ -476,7 +487,7 @@ async function RegularlyPageReload(page) {
       await page.waitFor(60000);
     }
   } catch(error){
-    console.log(error);
+    logger.error(error);
     throw error;
   }
 }

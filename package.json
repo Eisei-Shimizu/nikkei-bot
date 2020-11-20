@@ -5,6 +5,7 @@
   "author": "eisei",
   "dependencies": {
     "moment": "^2.29.1",
+    "log4js": "^6.3.0",
     "puppeteer": "1.6.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6"
