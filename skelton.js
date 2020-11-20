@@ -218,6 +218,8 @@ async function trade() {
             isCross = sma[0] == sma[1];
           }
           else if (isCross) {
+            logger.info("クロスしました");
+
             // 乖離幅設定
             const deviationRange = setting["deviationRange"];
 
@@ -237,10 +239,12 @@ async function trade() {
 
             if (posSide == SIDE_NONE && orderSide != SIDE_NONE) {
               // エントリー
+              logger.info("エントリー");
               order(tradePage, orderSide);
               isCross = null;
             } else if (posSide != SIDE_NONE && posSide != orderSide) {
               // 精算
+              logger.info("精算");
               liquidation(tradePage);
               isCross = null;
             }
