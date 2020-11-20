@@ -4,7 +4,7 @@
   "pw": "",
   "tradePw": "",
   "deviationRange": 15,
-  "lossCutRange": 0,
+  "lossCutRange": 60,
   "LOT": "1",
   "tradeTime": [
     { "dayOfWeek": "Weekdays", "start": "08:00", "end": "15:15" },
