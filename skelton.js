@@ -2,17 +2,21 @@ const puppeteer = require("puppeteer");
 const nikkei = require("./nikkei.js");
 const loginURL = "https://www.okasan-online.co.jp/login/jp/";
 const fs = require("fs");
-const log4js = require('log4js')
+const log4js = require("log4js");
 log4js.configure({
-  appenders : {
-    system : {type : 'datefile', filename : 'logs/system.log', pattern: '-yyyy-MM-dd'}
+  appenders: {
+    system: {
+      type: "datefile",
+      filename: "logs/system.log",
+      pattern: "-yyyy-MM-dd",
+    },
   },
-  categories : {
-    default : {appenders : ['system'], level : 'info'},
-  }
+  categories: {
+    default: { appenders: ["system"], level: "info" },
+  },
 });
 const logger = log4js.getLogger();
-logger.level = 'info';
+logger.level = "info";
 const setting = JSON.parse(fs.readFileSync("./setting.json", "utf8"));
 const dayOfWeekList = [
   "Sunday",
@@ -24,9 +28,6 @@ const dayOfWeekList = [
   "Saturday",
 ];
 const moment = require("moment");
-var lastGetPriceTime = null
-var isCross = null;
-
 const SIDE_NONE = 0;
 const SIDE_BUY = 1;
 const SIDE_SELL = -1;
@@ -35,6 +36,10 @@ const POS_SIDE_SELL = "売";
 const UP_SIDE = 1;
 const DOWN_SIDE = -1;
 const _sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+var lastGetPriceTime = null;
+var isCross = false;
+var currentPriceSide = SIDE_NONE;
 
 (async () => {
   while (true) {
@@ -91,10 +96,9 @@ async function trade() {
 
     await page.waitFor(5000);
 
-    await page.click(".btn_futures")
+    await page.click(".btn_futures");
 
     await page.waitFor(3000);
-
   } catch (error) {
     logger.error(error);
   }
@@ -110,7 +114,7 @@ async function trade() {
 
     gotoPositionView(tradePage);
 
-    await tradePage.waitFor(10000); 
+    await tradePage.waitFor(10000);
   } catch (error) {
     logger.error(error);
   }
@@ -185,9 +189,9 @@ async function trade() {
           liquidation(tradePage);
         }
       }
-      
+
       const now = moment();
-      if(lastGetPriceTime == null || 0 > lastGetPriceTime.diff(now, "hours")){
+      if (lastGetPriceTime == null || 0 > lastGetPriceTime.diff(now, "hours")) {
         lastGetPriceTime = moment();
         const result = await nikkei.getNikkei1hourCharts();
         if (!result["chart"]["error"]) {
@@ -213,11 +217,15 @@ async function trade() {
             logger.info("price side: DOWN_SIDE");
           }
 
-          // G.C or D.C
-          if(isCross == null){
-            isCross = sma[0] == sma[1];
+          if (currentPriceSide == SIDE_NONE && priceSide != SIDE_NONE) {
+            currentPriceSide = priceSide;
+          } else if (currentPriceSide != priceSide) {
+            isCross = true;
+            currentPriceSide = priceSide;
           }
-          else if (isCross) {
+
+          // G.C or D.C
+          if (isCross) {
             logger.info("クロスしました");
 
             // 乖離幅設定
@@ -232,7 +240,10 @@ async function trade() {
               orderSide = SIDE_BUY;
             }
             // 短平均線が中平均線下抜け =>　売り
-            else if (priceSide == UP_SIDE && deviationRange >= sma[1] - sma[0]) {
+            else if (
+              priceSide == UP_SIDE &&
+              deviationRange >= sma[1] - sma[0]
+            ) {
               // 売り注文
               orderSide = SIDE_SELL;
             }
@@ -255,7 +266,7 @@ async function trade() {
       }
 
       await RegularlyPageReload(tradePage);
-    }catch(error){
+    } catch (error) {
       // 例外発生したらブラウザを開き直してログインからスタート
       logger.error(error);
       break;
@@ -340,14 +351,14 @@ async function login(page) {
 
     await page.waitForSelector("#loginId");
     await page.waitForSelector("#loginPass");
-  
+
     // ログイン情報入力
     await page.type("input[name=account]", setting["id"]);
     await page.type("input[name=pass]", setting["pw"]);
-  
+
     // 5秒待機
     await page.waitFor(5000);
-  
+
     // ログインボタンクリック
     await page.click("input[id=sougouSubmit]");
   } catch (error) {
@@ -391,9 +402,9 @@ async function gotoTradeView(page) {
         "#table_1 > table > tbody > tr:nth-child(4) > td:nth-child(10) > span > .side-buy"
       ),
     ]);
-    } catch (error) {
-      throw error;
-    }
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function order(page, orderSide) {
@@ -401,10 +412,10 @@ async function order(page, orderSide) {
     gotoTradeView(page);
 
     await page.waitFor(3000);
-  
+
     // 枚数設定
     await page.type("input[id=OrderQuantity]", setting["LOT"]);
-  
+
     // 買い・売り設定
     if (orderSide == SIDE_BUY) {
       // 買い
@@ -417,29 +428,28 @@ async function order(page, orderSide) {
         '#all-order-content > table.order.variable.view-when-1.display-relay.display-portfolio.content-2col > tbody > tr:nth-child(1) > td.content > div > label.side-sell > input[type="radio"]'
       );
     }
-  
+
     // 成行注文
     await page.click("#OrderTypeNormal > div > label:nth-child(1)");
-  
+
     // 注文内容確認画面へ
     await Promise.all([
       page.waitForNavigation({ waitUntil: "load" }),
       page.click("#OrderButton"),
     ]);
-  
+
     // 取引パスワード入力
     await page.type("input[name=TradingPassword]", setting["tradePw"]);
-  
+
     // 注文
     await Promise.all([
       page.waitForNavigation({ waitUntil: "load" }),
       page.click("#OrderButton"),
     ]);
-  
+
     gotoPositionView(page);
-    
   } catch (error) {
-    throw error;  
+    throw error;
   }
 }
 
@@ -476,7 +486,7 @@ async function liquidation(page) {
     await Promise.all([
       page.waitForNavigation({ waitUntil: "load" }),
       page.click("#OrderButton"),
-    ]); 
+    ]);
   } catch (error) {
     throw error;
   }
@@ -490,7 +500,7 @@ async function RegularlyPageReload(page) {
       await Promise.all([page.click(".withImage")]);
       await page.waitFor(60000);
     }
-  } catch(error){
+  } catch (error) {
     logger.error(error);
     throw error;
   }
