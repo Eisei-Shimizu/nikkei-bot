@@ -112,7 +112,7 @@ async function trade() {
       height: 800,
     });
 
-    gotoPositionView(tradePage);
+    await gotoPositionView(tradePage);
 
     await tradePage.waitFor(10000);
   } catch (error) {
@@ -395,6 +395,8 @@ async function gotoTradeView(page) {
       page.click("#main-menu > li:nth-child(2)"),
     ]);
 
+    await page.waitFor(3000);
+
     // トレード画面へ
     await Promise.all([
       page.waitForNavigation({ waitUntil: "load" }),
@@ -409,7 +411,7 @@ async function gotoTradeView(page) {
 
 async function order(page, orderSide) {
   try {
-    gotoTradeView(page);
+    await gotoTradeView(page);
 
     await page.waitFor(3000);
 
@@ -420,15 +422,14 @@ async function order(page, orderSide) {
     if (orderSide == SIDE_BUY) {
       // 買い
       await page.click(
-        '#all-order-content > table.order.variable.view-when-1.display-relay.display-portfolio.content-2col > tbody > tr:nth-child(1) > td.content > div > label.side-buy > input[type="radio"]'
+        '#all-order-content > table.order.variable.view-when-1.display-relay.display-portfolio.content-2col > tbody > tr:nth-child(1) > td.content > div > label.side-buy'
       );
     } else {
       // 売り
       await page.click(
-        '#all-order-content > table.order.variable.view-when-1.display-relay.display-portfolio.content-2col > tbody > tr:nth-child(1) > td.content > div > label.side-sell > input[type="radio"]'
+        '#all-order-content > table.order.variable.view-when-1.display-relay.display-portfolio.content-2col > tbody > tr:nth-child(1) > td.content > div > label.side-sell'
       );
     }
-
     // 成行注文
     await page.click("#OrderTypeNormal > div > label:nth-child(1)");
 
