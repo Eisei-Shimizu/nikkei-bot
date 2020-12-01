@@ -456,20 +456,11 @@ async function order(page, orderSide) {
 
 async function liquidation(page) {
   try {
-    // 建玉画面へ
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "load" }),
-      page.click(".sub-menu > li:nth-child(3)"),
-    ]);
-
-    // 決済注文画面へ
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "load" }),
-      page.click('button[cellbutton="true"]'),
-    ]);
+    await page.click('#main > div.panel.datagrid > div > div.datagrid-view > div.datagrid-view2 > div.datagrid-body > table > tbody > tr.datagrid-row > td:nth-child(10)');
+    await page.waitFor(5000);
 
     // 全数量
-    await page.click("button[id=AllQty]");
+    await page.click("#quantity > table > tbody > tr:nth-child(1) > td.content > table.selectlist > tbody > tr > td:nth-child(2) > #AllQty");
 
     // 成行注文
     await page.click("#OrderTypeNormal > div > label:nth-child(1)");
