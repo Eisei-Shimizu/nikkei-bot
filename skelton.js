@@ -218,8 +218,10 @@ async function trade() {
           }
 
           if (currentPriceSide == SIDE_NONE && priceSide != SIDE_NONE) {
+            logger.info("currentPriceSide: NONE");
             currentPriceSide = priceSide;
           } else if (currentPriceSide != priceSide) {
+            logger.info("currentPriceSide: " + currentPriceSide == UP_SIDE ? "UP_SIDE": "DOWN_SIDE");
             isCross = true;
             currentPriceSide = priceSide;
           }
@@ -235,14 +237,14 @@ async function trade() {
             let orderSide = SIDE_NONE;
 
             // 短平均線が中平均線上抜け =>　買い
-            if (priceSide == DOWN_SIDE && deviationRange >= sma[0] - sma[1]) {
+            if (priceSide == DOWN_SIDE && sma[0] - sma[1] >= deviationRange) {
               // 買い注文
               orderSide = SIDE_BUY;
             }
             // 短平均線が中平均線下抜け =>　売り
             else if (
               priceSide == UP_SIDE &&
-              deviationRange >= sma[1] - sma[0]
+              sma[1] - sma[0] >= deviationRange
             ) {
               // 売り注文
               orderSide = SIDE_SELL;
