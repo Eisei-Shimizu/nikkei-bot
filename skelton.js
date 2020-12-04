@@ -237,13 +237,13 @@ async function trade() {
             let orderSide = SIDE_NONE;
 
             // 短平均線が中平均線上抜け =>　買い
-            if (priceSide == DOWN_SIDE && sma[0] - sma[1] >= deviationRange) {
+            if (priceSide == UP_SIDE && sma[0] - sma[1] >= deviationRange) {
               // 買い注文
               orderSide = SIDE_BUY;
             }
             // 短平均線が中平均線下抜け =>　売り
             else if (
-              priceSide == UP_SIDE &&
+              priceSide == DOWN_SIDE &&
               sma[1] - sma[0] >= deviationRange
             ) {
               // 売り注文
