@@ -185,8 +185,8 @@ async function trade() {
         if (isLossCut) {
           // 精算
           logger.info("ロスカット");
-          gotoPositionView(tradePage);
-          liquidation(tradePage);
+          await liquidation(tradePage);
+          await gotoPositionView(tradePage);
         }
       }
 
