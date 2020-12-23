@@ -187,6 +187,8 @@ async function trade() {
           logger.info("ロスカット");
           await liquidation(tradePage);
           await gotoPositionView(tradePage);
+
+          posSide = SIDE_NONE;
         }
       }
 
