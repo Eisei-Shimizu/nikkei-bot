@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer");
 const nikkei = require("./nikkei.js");
+const charts = require("./load-charts.js");
 const loginURL = "https://www.okasan-online.co.jp/login/jp/";
 const fs = require("fs");
 const log4js = require("log4js");
@@ -43,6 +44,7 @@ var currentPriceSide = SIDE_NONE;
 
 (async () => {
   while (true) {
+    charts.loadCharts();
     if (checkTradeTime()) {
       logger.info("トレード可能");
       await trade();
@@ -191,11 +193,11 @@ async function trade() {
           posSide = SIDE_NONE;
         }
       }
-
+      
       const now = moment();
       if (lastGetPriceTime == null || 0 > lastGetPriceTime.diff(now, "hours")) {
         lastGetPriceTime = moment();
-        const result = await nikkei.getNikkei1hourCharts();
+        /*const result = await nikkei.getNikkei1hourCharts();
         if (!result["chart"]["error"]) {
           const closePriceList =
             result["chart"]["result"][0]["indicators"]["quote"][0].close;
@@ -266,7 +268,8 @@ async function trade() {
           }
         } else {
           logger.error(result["chart"]["error"]);
-        }
+        }*/
+        
       }
 
       await RegularlyPageReload(tradePage);
