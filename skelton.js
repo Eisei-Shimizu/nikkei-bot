@@ -1,5 +1,4 @@
 const puppeteer = require("puppeteer");
-const nikkei = require("./nikkei.js");
 const charts = require("./load-charts.js");
 const loginURL = "https://www.okasan-online.co.jp/login/jp/";
 const fs = require("fs");
@@ -44,7 +43,6 @@ var currentPriceSide = SIDE_NONE;
 
 (async () => {
   while (true) {
-    charts.loadCharts();
     if (checkTradeTime()) {
       logger.info("トレード可能");
       await trade();
@@ -197,18 +195,13 @@ async function trade() {
       const now = moment();
       if (lastGetPriceTime == null || 0 > lastGetPriceTime.diff(now, "hours")) {
         lastGetPriceTime = moment();
-        /*const result = await nikkei.getNikkei1hourCharts();
-        if (!result["chart"]["error"]) {
-          const closePriceList =
-            result["chart"]["result"][0]["indicators"]["quote"][0].close;
-          const filterdClosePriceList = closePriceList.filter(function (value) {
-            return value != null;
-          });
-
+        const closePriceList = charts.loadCharts();
+        
+        if (closePriceList.length != 0) {
           const smaPeriodList = [3, 10, 25];
 
           // 平均線を3, 10, 25 それぞれで算出
-          const sma = getSMA(filterdClosePriceList, smaPeriodList);
+          const sma = getSMA(closePriceList, smaPeriodList);
           logger.info(sma);
 
           let priceSide = SIDE_NONE;
@@ -267,8 +260,8 @@ async function trade() {
             }
           }
         } else {
-          logger.error(result["chart"]["error"]);
-        }*/
+          logger.error("データ取得に失敗しました");
+        }
         
       }
 
@@ -341,11 +334,10 @@ function getSMA(priceList, periodList) {
   for (const index in periodList) {
     var closePriceSum = 0;
     var period = periodList[index];
-    var tmpList = priceList;
 
     console.log(period);
     for (I = 0; I < period; I++) {
-      closePriceSum += tmpList.pop();
+      closePriceSum += priceList[I];
     }
     sma.push(Math.ceil(closePriceSum / period));
   }
