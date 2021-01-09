@@ -250,6 +250,8 @@ async function trade() {
             if (posSide == SIDE_NONE && orderSide != SIDE_NONE) {
               // エントリー
               logger.info("エントリー");
+              var sideName = orderSide == SIDE_BUY ? "BUY" : "SELL"
+              logger.info(sideName);
               order(tradePage, orderSide);
               isCross = null;
             } else if (posSide != SIDE_NONE && posSide != orderSide) {
