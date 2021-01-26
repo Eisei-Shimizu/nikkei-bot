@@ -193,8 +193,9 @@ async function trade() {
       }
       
       const now = moment();
-      if (lastGetPriceTime == null || 0 > lastGetPriceTime.diff(now, "hours")) {
-        lastGetPriceTime = moment();
+
+      if (lastGetPriceTime == null || lastGetPriceTime != now.get("minute")) {
+        lastGetPriceTime = now.get("minute");
         const closePriceList = charts.loadCharts();
         
         if (closePriceList.length != 0) {
@@ -487,8 +488,8 @@ async function liquidation(page) {
 
 async function RegularlyPageReload(page) {
   try {
-    // 1時間に1度価格取得処理実行するために1分ごとの画面更新を60回繰り返す
-    for (let I = 0; I < 60; I++) {
+    // 1時間に1度価格取得処理実行するために1分ごとの画面更新を5回繰り返す
+    for (let I = 0; I < 5; I++) {
       console.log("画面更新");
       await Promise.all([page.click(".withImage")]);
       await page.waitFor(60000);
