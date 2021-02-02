@@ -177,7 +177,7 @@ async function trade() {
           isLossCut = true;
         } else if (
           posSide == SIDE_SELL &&
-          lossCutRange >= currentPrice - posPrice
+          lossCutRange <= currentPrice - posPrice
         ) {
           isLossCut = true;
         }
