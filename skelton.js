@@ -60,6 +60,8 @@ async function trade() {
     slowMo: 50, // 指定ミリ秒のスローモーションで実行
   });
 
+  try {
+
   // 新規ページ開く
   const page = await browser.newPage();
 
@@ -70,8 +72,6 @@ async function trade() {
 
   // ログイン
   await login(page);
-
-  try {
     // 5秒待機
     await page.waitFor(5000);
 
@@ -194,8 +194,8 @@ async function trade() {
       
       const now = moment();
 
-      if (lastGetPriceTime == null || lastGetPriceTime != now.get("minute")) {
-        lastGetPriceTime = now.get("minute");
+      if (lastGetPriceTime == null || lastGetPriceTime != now.get("hour")) {
+        lastGetPriceTime = now.get("hour");
         const closePriceList = charts.loadCharts();
         
         if (closePriceList.length != 0) {
@@ -214,14 +214,16 @@ async function trade() {
             priceSide = DOWN_SIDE;
             logger.info("price side: DOWN_SIDE");
           }
-
-          if (currentPriceSide == SIDE_NONE && priceSide != SIDE_NONE) {
-            logger.info("currentPriceSide: NONE");
-            currentPriceSide = priceSide;
-          } else if (currentPriceSide != priceSide) {
-            logger.info("currentPriceSide: " + currentPriceSide == UP_SIDE ? "UP_SIDE": "DOWN_SIDE");
-            isCross = true;
-            currentPriceSide = priceSide;
+          
+          if(priceSide != SIDE_NONE){
+            if (currentPriceSide == SIDE_NONE) {
+              logger.info("currentPriceSide: NONE");
+              currentPriceSide = priceSide;
+            } else if (currentPriceSide != priceSide) {
+              logger.info("currentPriceSide: " + currentPriceSide == UP_SIDE ? "UP_SIDE": "DOWN_SIDE");
+              isCross = true;
+              currentPriceSide = priceSide;
+            }
           }
 
           // G.C or D.C
@@ -259,7 +261,6 @@ async function trade() {
               // 精算
               logger.info("精算");
               liquidation(tradePage);
-              isCross = null;
             }
           }
         } else {
@@ -487,15 +488,14 @@ async function liquidation(page) {
 }
 
 async function RegularlyPageReload(page) {
-  try {
-    // 1時間に1度価格取得処理実行するために1分ごとの画面更新を5回繰り返す
-    for (let I = 0; I < 5; I++) {
-      console.log("画面更新");
-      await Promise.all([page.click(".withImage")]);
-      await page.waitFor(60000);
-    }
-  } catch (error) {
+  // 1時間に1度価格取得処理実行するために1分ごとの画面更新を5回繰り返す
+  console.log("画面更新");
+  await Promise.all([page.click(".withImage")]).then( () => {
+    logger.info("画面更新成功") ;  
+  }) 
+  .catch( function (error) {
     logger.error(error);
-    throw error;
-  }
+    throw error;    
+  });
+  await page.waitFor(60000);
 }
