@@ -28,6 +28,7 @@ const dayOfWeekList = [
   "Saturday",
 ];
 const moment = require("moment");
+const { throws } = require("assert");
 const SIDE_NONE = 0;
 const SIDE_BUY = 1;
 const SIDE_SELL = -1;
@@ -104,14 +105,16 @@ async function trade() {
   }
 
   const pages = await browser.pages();
-  const tradePage = pages[2];
-
+  tradePage = pages[2];
+  
   try {
+
     await tradePage.setViewport({
       width: 1200,
       height: 800,
     });
-
+    await tradePage.waitFor(10000);
+    
     await gotoPositionView(tradePage);
 
     await tradePage.waitFor(10000);
@@ -123,6 +126,7 @@ async function trade() {
   while (checkTradeTime()) {
     try {
       // ポジションがあるかどうか決済ボタンの表示で判断
+
       let position = [];
       try {
         position = await tradePage.$$('button[cellbutton="true"]');
@@ -255,12 +259,11 @@ async function trade() {
               logger.info("エントリー");
               var sideName = orderSide == SIDE_BUY ? "BUY" : "SELL"
               logger.info(sideName);
-              order(tradePage, orderSide);
-              isCross = null;
+              await order(tradePage, orderSide);
             } else if (posSide != SIDE_NONE && posSide != orderSide) {
               // 精算
               logger.info("精算");
-              liquidation(tradePage);
+              await liquidation(tradePage);
             }
           }
         } else {
@@ -341,7 +344,7 @@ function getSMA(priceList, periodList) {
 
     console.log(period);
     for (I = 0; I < period; I++) {
-      closePriceSum += priceList[I];
+      closePriceSum += priceList[I+1];
     }
     sma.push(Math.ceil(closePriceSum / period));
   }
@@ -451,7 +454,9 @@ async function order(page, orderSide) {
       page.click("#OrderButton"),
     ]);
 
-    gotoPositionView(page);
+    isCross = null;
+
+    await gotoPositionView(page);
   } catch (error) {
     throw error;
   }
